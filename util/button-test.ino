@@ -10,8 +10,7 @@ namespace LedToggleButton {
 int pin;
 int ledState;
 int lastButtonState;
-void init(int inPin, int outPin) {
-  pinMode(inPin, INPUT);
+void init(int outPin) {
   pinMode(outPin, OUTPUT);
   pin = outPin;
   ledState = false;

@@ -1,0 +1,112 @@
+Story Portal Poofer Control Concept
+-----------------------------------
+
+ 
+
+The Story portal stage incudes a set of seven flame effects commonly known as propane poofers.  These flame effects interact with stage elements and enhance the story of the story portal itself.  The poofers are fueled with propane vapor, and use 12v solenoid valves for effect control.  The solenoid valves are in turn controlled by an Arduino Mega 2560 microcontroller using custom software which will be described here.
+
+ 
+
+For the story portal effect, we need a sequence triggered by the wheel motion, then a timed sequence when wheel stop is detected.  We also need additional functions to attract people to the stage and test the poofer hardware.  This last feature will also act as a minimalist backup mode to get flame effects if the sequencer system isn't working.
+
+ 
+
+To accomplish this, we connect sensors and actuators to the I/O pins of the Arduino Mega.  In addition to the 7 poofer solenoids, there are 7 manual fire buttons, a "beat" button, a mode select switch, 2 hall sensors, and a digital output to communicate with the lighting/sound system.
+
+ 
+
+---
+
+ 
+
+To select which pins of the Arduino to use for these peripherals, we should look at what each of these devices needs.  The poofer solenoids need 12Vdc current to operate, so we use a 5Vdc relay module to drive them.  The relay inputs (to the solenoids) don't have any specific requirements, other than that we'll be actuating them in groups.  Like most microprocessors, the ATMega 2560 groups its I/O pins into ports which can be accessed as a group.  Therefore, we'll assign the Poofer relays to PORTA on the Arduino.  Note that the relays are active low, so we'll need to keep that in mind when initializing and setting the port.
+
+ 
+
+The manual fire buttons, like the poofer relays, are grouped and read together, so we should assign them all to a single port.  We want to read the switches at the same time as controlling the poofer relays, so we should select pins that can interrupt the processor when pressed.  PORTK is contiguous and supports pin-change interrupts, so we will assign the switches there.  There is a small issue that pin-change interrupts don't tell us which specific pin changed directly, but we'll just read the entire port and not worry about which pin(s) changed.  We'll use the internal pull-up resistors on the pins and again make them active-low.
+
+ 
+
+The hall sensors are high priority in show mode, and when both enabled will give quadrature information on wheel movement.  We need to assign them to individual external interrupt pins.  Although PORTD is broken up across various connectors, we can use PD0 and PD1 (INT0, INT1) for these active-low switches.
+
+ 
+
+The mode selector switch uses an external encoder to present a 3-bit value for the operating mode.  PORTB supports pin-change interrupts (PCINT 7:0) so we can assign the encoder to the low order bits of this port to sense when the mode is switched.
+
+ 
+
+The beat button (used if the hall sensors fail) gets its own interrupt, using PD2 on PORTD.
+
+ 
+
+The remaining two outputs, the beat button enabled light and the wheel spin signal for the show system have no special requirements and can be assigned to PORTC (PC1:0) respectively.
+
+ 
+
+Things like the igniters and E-stop are handled by control wiring separate from Arduino.
+
+ 
+
+---
+
+ 
+
+Given this problem description and this hardware we can now turn to the software design for poofer control.  
+
+ 
+
+---
+
+ 
+
+Our inputs are all discrete events, and our outputs are also events and timed sequences of events, so we can fully describe the system behavior with a finite state machine.  Since we've assigned our inputs to pins which support interrupts, we can narrow down our design to an interrupt-driven event architecture.
+
+ 
+
+At the top level, the mode selector event will drive transitions between groups of states and ISRs.  The modes are defined as standby, manual, show, and beat.
+
+ 
+
+Standby mode is simple, the system ignores all inputs except for the mode selector.
+
+ 
+
+Manual mode watches the manual switches and drives the respective relays for testing and as a low-level backup.
+
+ 
+
+Show mode is the most complex, which means that show mode has a number of states:
+
+ 
+
+ - waiting-to-start
+ - spinning
+ - stop-timeout
+ - timed sequence
+
+ 
+
+In waiting-to-start, the code looks for some number of sensor events (2?) close enough together in time to indicate that the wheel is spinning.  When this is detected, it sets up the poof sequence, stop-timeout, sets the spinning output, then transitions to spinning.
+
+ 
+
+In spinning, the code resets the stop-timeout counter, then decrements the pattern array index and writes the byte to  PORTA each time a sensor event occurs.
+
+ 
+
+When the wheel slows to a stop, the stop-timeout occurs before the next spinning event, which causes the code to clear the spinning output, disable the sensor interrupt, set up the sequence timer, stop sequence byte array, and enables the beat timer interrupt.  This is the transition to timed-sequence.
+
+ 
+
+In timed-sequence, the code clocks though the byte array as discussed above, but when the array counter reaches 0, the code disables the beat counter interrupt, enables the sensor event interrupt, transitioning back to waiting-to-start.
+
+ 
+
+Beat runs similar to show mode, except it watches the beat button instead of the hall sensors.
+
+---
+20 interrupts per wheel revolution
+stop-timeout timer = wheel spin timer
+sequence timer=beat timer = tempo for the poofers 
+stop sequence byte array = pose = poofer pattern
+

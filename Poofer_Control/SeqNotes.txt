@@ -1,0 +1,37 @@
+Sequencer Notes
+---------------
+
+The poof sequence is a series of bytes that written to PORTA to drive the solenoids.
+
+We can use a beat analogy, so each byte is say, 250 ms. so to turn on a poofer for 1 sec. would be 4 beats.
+
+Then we can set up a timer to trigger an interrupt on the beat.  The ISR would decrement the byte counter, write the new byte to PORTA and return.  If the counter is zero, it sets PORTB to 0x00 and returns.
+
+Starting a sequence is now setting the counter and byte array, so when the next tick happens, the last byte in the array is sent to PORTA.  This minimizes the chance of a counter overflow or something causing the sequence to go wild, but you have to write the array in reverse order.
+
+Triggered sequences work the same way, but you have to be careful to keep the sequence shorter than the time to the next trigger event, or the sequence will be truncated.
+
+Or use a separate triggered advance ISR?  Probably, but now you have to make sure you know what ISR is controlling PORTB at all times.
+
+We need a state machine to control show mode.
+
+----
+
+For the story portal effect, we need a sequence triggered by the wheel motion, then a timed sequence when wheel stop is detected.
+
+Which means that show mode has a number of states:
+ - waiting-to-start
+ - spinning
+ - stop-timeout
+ - timed sequence
+
+In waiting-to-start, the code looks for some number of sensor events (3?) close enough together in time to indicate that the wheel is spinning.  When this is detected, it sets up the poof sequence, stop-timeout, then transitions to spinning.
+
+In spinning, the code resets the stop-timeout counter, then decrements and writes the PORTB byte each time a sensor event occurs.
+
+When the wheels slows to a stop, the stop-timeout occurs before the next spinning event, which causes the code to disable the sensor interrupt, set up the sequence timer, byte array, and enables the beat timer interrupt.  This is the transition to timed-sequence.
+
+In timed-sequence, the code clocks though the byte array as discussed above, but when the array counter reaches 0, the code disables the beat counter interrupt, enables the sensor event interrupt, transitioning back to waiting-to-start.
+
+---
+
