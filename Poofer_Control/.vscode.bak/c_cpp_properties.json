@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "AVR",
+            "intelliSenseMode": "${default}",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "compilerPath": "C:\\Users\\DyllanTo\\scoop\\apps\\avr-gcc\\current\\bin\\avr-gcc.exe",
+            "includePath": [
+                "C:\\Users\\DyllanTo\\scoop\\apps\\avr-gcc\\current\\avr\\include\\**"
+            ],
+            "compilerArgs": [
+                "-mmcu=atmega2560",
+                "-DF_CPU=16000000UL"
+            ]
+        }
+    ],
+    "version": 4
+}

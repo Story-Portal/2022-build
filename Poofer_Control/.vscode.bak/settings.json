@@ -1,0 +1,12 @@
+{
+  "AVR.source.compiler": "C:\\Users\\DyllanTo\\scoop\\apps\\avr-gcc\\current\\bin\\avr-gcc.exe",
+  "AVR.programmer.tool": "C:\\Users\\DyllanTo\\scoop\\apps\\avrdude\\current\\avrdude.exe",
+  "AVR.programmer.definitions": "C:\\Users\\DyllanTo\\scoop\\apps\\avrdude\\current\\avrdude.conf",
+  "AVR.source.libraries": [
+    "C:\\Users\\DyllanTo\\scoop\\apps\\avr-gcc\\current\\avr\\include"
+  ],
+  "AVR.device.type": "atmega2560",
+  "AVR.device.frequency": 16000000,
+  "AVR.programmer.type": "arduino",
+  "AVR.programmer.port": "COM3"
+}

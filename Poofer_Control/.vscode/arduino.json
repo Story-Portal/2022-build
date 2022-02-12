@@ -1,5 +1,8 @@
 {
-    "board": "arduino:avr:mega",
-    "configuration": "cpu=atmega2560",
-    "programmer": "arduino:avrisp"
+  "configuration": "cpu=atmega2560",
+  "board": "arduino:avr:mega",
+  "port": "COM3",
+  "programmer": "arduino:avrispmkii",
+  "sketch": "Poofer_Control.ino",
+  "output": "../poofer_control_build"
 }

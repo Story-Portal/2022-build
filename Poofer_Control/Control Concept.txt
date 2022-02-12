@@ -107,6 +107,6 @@ Beat runs similar to show mode, except it watches the beat button instead of the
 ---
 20 interrupts per wheel revolution
 stop-timeout timer = wheel spin timer
-sequence timer=beat timer = tempo for the poofers 
+sequence timer = beat timer = tempo for the poofers 
 stop sequence byte array = pose = poofer pattern
 
